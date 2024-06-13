@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Client } from 'pg';
 
 import { User } from '../entities/user.entity';
 import { Order } from '../entities/order.entity';
@@ -11,6 +12,7 @@ import { ProductsService } from './../../products/services/products.service';
 export class UsersService {
   constructor(
     private productsService: ProductsService,
+    @Inject('PG') private clientPG: Client,
     private configService: ConfigService,
   ) {}
 
@@ -75,5 +77,18 @@ export class UsersService {
       user,
       products: this.productsService.findAll(),
     };
+  }
+
+  getTasks() {
+    return new Promise((resolve, reject) => {
+      // RETORNAMOS UNA PROMESA YA QUE QUERY NOS DEVUELVE UN CALLBACK Y PARA PODER UTILIZAR ESTE METODO EN UN CONTROLADOR DEBE RETORNAR ALGO.
+      this.clientPG.query('SELECT * FROM tasks', (err, res) => {
+        // CON QUERY PODEMOS HACER CONSULTAS A LA BASE DE DATOS.
+        if (err) {
+          reject(err);
+        }
+        resolve(res.rows);
+      });
+    });
   }
 }
